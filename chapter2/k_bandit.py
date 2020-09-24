@@ -12,14 +12,17 @@ def normal_initialization(k, mu=0., sigma=1.):
 def constant_initialization(k, c=0.):
     return np.full(k,c)
 
+def GRW_evolution(q, sigma):
+    return q + np.random.normal(scale=sigma, size=len(q))
+
 class bandit:
-    def __init__(self, k, q, mode='s'):
+    def __init__(self, k, q, update_function=lambda x: x):
         # Mode is 's' for stationary or 'ns' for non-stationary
         # Maybe we could pass an update function as parameter ?
         self.__k = k
         self.__q = q
         self.__ba = np.argmax(self.__q) # Best action
-        self.__mode = mode
+        self.__uf = update_function
 
     def computeReward(self, A):
         # The action must be an integer
@@ -27,7 +30,7 @@ class bandit:
         if (A < 0) or (A >= k): 
             return # Add exception
         reward = np.random.normal(loc=self.__q[A])
-        self.__updateValues()
+        self.__q = self.__uf(self.__q)
         self.__updateBestAction()
         return reward
 
@@ -37,24 +40,17 @@ class bandit:
     def getNActions(self):
         return self.__k
 
-    def __updateValues(self):
-        if self.__mode == 's':
-            return # Do nothing
-        elif self.__mode == 'ns':
-            self.__q += np.random.normal(scale=0.01, size=self.__k)
-            return
-        else:
-            return #Add an exception
-
     def __updateBestAction(self):
         return np.argmax(self.__q)
 
 
 class epsilon_greedy:
-    def __init__(self, epsilon, n_step, bandit, debug=False):
+    def __init__(self, bandit, epsilon=0.1, n_step=1000,
+                 update_function=lambda N: N+1, debug=False):
         self.__epsilon = epsilon
         self.__k = bandit.getNActions()
         self.__n_step = n_step
+        self.__uf = update_function
 
         self.__Q = np.zeros(k)
         self.__N = np.zeros(k)
@@ -80,7 +76,7 @@ class epsilon_greedy:
         return np.random.randint(0, k)
 
     def __updateValues(self, action, reward):
-        self.__N[action] += 1
+        self.__N[action] = self.__uf(self.__N[action])
         self.__Q[action] += (reward - self.__Q[action]) / self.__N[action]
 
     def getInfo(self):
@@ -105,12 +101,12 @@ if __name__ == "__main__":
 
     k = 10
     n_run = 2000
-    n_time = 1000
+    n_time = 10000
 
     epsilons = [0., 0.1, 0.01]
     results = {}
 
-    oa = '% Optimal action'
+    oa = '\% Optimal action'
     ar = 'Average reward'
     
     for epsilon in epsilons:
@@ -118,8 +114,9 @@ if __name__ == "__main__":
         runs = {oa:[], ar:[]}
         for i in range(n_run):
             q = constant_initialization(k) # True values
-            B = bandit(k, q, mode='ns')
-            learner = epsilon_greedy(epsilon, n_time, B, debug=True)
+            B = bandit(k, q, lambda q: GRW_evolution(q, 0.01))
+            learner = epsilon_greedy(B, epsilon, n_time, 
+                                     lambda N: 10, debug=True)
             learner.learn()
             infos = learner.getInfo()
 
