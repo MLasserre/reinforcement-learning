@@ -6,19 +6,19 @@ import matplotlib.pyplot as plt
 mpl.rc('text', usetex=True)
 mpl.rc('font', family='serif')
 
+# Functions initializing the true action values
 def normal_initialization(k, mu=0., sigma=1.):
     return np.random.normal(mu, sigma, size=k)
-
 def constant_initialization(k, c=0.):
     return np.full(k,c)
 
+# Function controlling the time evolution of true action values
+# in a non-stationary k-bandit
 def GRW_evolution(q, sigma):
     return q + np.random.normal(scale=sigma, size=len(q))
 
 class bandit:
     def __init__(self, k, q, update_function=lambda x: x):
-        # Mode is 's' for stationary or 'ns' for non-stationary
-        # Maybe we could pass an update function as parameter ?
         self.__k = k
         self.__q = q
         self.__ba = np.argmax(self.__q) # Best action
@@ -97,11 +97,11 @@ class epsilon_greedy:
 
 
 if __name__ == "__main__":
-    save = False
+    save = True
 
     k = 10
     n_run = 2000
-    n_time = 10000
+    n_time = 1000
 
     epsilons = [0., 0.1, 0.01]
     results = {}
@@ -113,10 +113,13 @@ if __name__ == "__main__":
         print("Epsilon: ", epsilon)
         runs = {oa:[], ar:[]}
         for i in range(n_run):
-            q = constant_initialization(k) # True values
-            B = bandit(k, q, lambda q: GRW_evolution(q, 0.01))
-            learner = epsilon_greedy(B, epsilon, n_time, 
-                                     lambda N: 10, debug=True)
+            #q = constant_initialization(k) # True values
+            #B = bandit(k, q, lambda q: GRW_evolution(q, 0.01))
+            #learner = epsilon_greedy(B, epsilon, n_time, 
+            #                         lambda N: 10, debug=True)
+            q = normal_initialization(k) # True values
+            B = bandit(k, q)
+            learner = epsilon_greedy(B, epsilon, n_time, debug=True)
             learner.learn()
             infos = learner.getInfo()
 
@@ -124,7 +127,7 @@ if __name__ == "__main__":
             runs[ar].append(infos[1])
 
         runs[oa] = np.array(runs[oa]).mean(axis=0)*100
-        runs[ar] = np.array(runs[ar]).mean(axis=0)*100
+        runs[ar] = np.array(runs[ar]).mean(axis=0)
 
         results[epsilon] = runs
     
