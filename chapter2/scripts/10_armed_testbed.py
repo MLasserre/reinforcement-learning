@@ -1,6 +1,6 @@
 import numpy as np
-import bandit as bd
-import bandit_learner as bl
+from bandit.bandit_class import Bandit
+from bandit.bandit_learner import EpsilonGreedyLearner
 
 import matplotlib as mpl
 import matplotlib.ticker as mtick
@@ -12,9 +12,9 @@ save = True
 
 k = 10
 n_run = 2000
-n_time = 1000
+n_step = 1000
 
-epsilons = [0., 0.1, 0.01]
+epsilons = {0.: 'green', 0.1: 'blue', 0.01: 'red'}
 results = {}
 
 oa = '\\% Optimal action'
@@ -24,14 +24,9 @@ for epsilon in epsilons:
     print("Epsilon: ", epsilon)
     runs = {oa:[], ar:[]}
     for i in range(n_run):
-        #q = constant_initialization(k) # True values
-        #B = bandit(k, q, lambda q: GRW_evolution(q, 0.01))
-        #learner = epsilon_greedy_solver(B, epsilon, n_time, 
-        #                         lambda N: 10, debug=True)
-        q = bd.normal_initialization(k) # True values
-        B = bd.bandit(k, q)
-        learner = bl.epsilon_greedy_learner(B, epsilon, n_time, debug=True)
-        learner.learn()
+        B = bd.Bandit(k)
+        learner = bd.EpsilonGreedyLearner(B, epsilon, debug=True)
+        learner.learn(n_step)
         infos = learner.getInfo()
 
         runs[oa].append(infos[0])
@@ -42,12 +37,18 @@ for epsilon in epsilons:
 
     results[epsilon] = runs
 
+
+# Plotting the figure for the average reward
 fig, ax = plt.subplots()
 for epsilon in results:
-    ax.plot(list(range(n_time)), results[epsilon][ar],
-            label='$\\epsilon = ' + str(epsilon) + '$', linewidth=1)
+    ax.plot(list(range(n_step)),
+            results[epsilon][ar],
+            label='$\\epsilon = ' + str(epsilon) + '$',
+            color=epsilons[epsilon],
+            linewidth=1)
+
 ax.set_ylabel(ar)
-ax.set_xlim([0,n_time])
+ax.set_xlim([0,n_step])
 ax.set_xlabel('Steps')
 ax.legend()
 if save:
@@ -55,13 +56,17 @@ if save:
 else:
     plt.show()
 
+# Plotting the figure for the optimal action
 fig, ax= plt.subplots()
 for epsilon in results:
-    ax.plot(list(range(n_time)), results[epsilon][oa],
-            label='$\\epsilon = ' + str(epsilon) + '$', linewidth=1)
+    ax.plot(list(range(n_step)),
+            results[epsilon][oa],
+            label='$\\epsilon = ' + str(epsilon) + '$',
+            color=epsilons[epsilon],
+            linewidth=1)
 ax.set_ylabel(oa)
 ax.set_xlabel('Steps')
-ax.set_xlim([0,n_time])
+ax.set_xlim([0,n_step])
 ax.set_ylim([0,100])
 ax.yaxis.set_major_formatter(mtick.PercentFormatter())
 ax.legend()
