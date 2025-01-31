@@ -1,0 +1,25 @@
+[project]
+name = "reinforcement-learning"
+version = "0.1"
+description = "A set of python modules from the book of Sutton"
+readme = "README.rst"
+maintainers = [{name = "MLasserre"}]
+license = {text = "CC BY-NC 4.0"}
+dependencies = [
+    "numpy>=2.2.2",
+    "matplotlib>=3.10.0"
+]
+
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = [
+    "reinforcement_learning",
+    "reinforcement_learning.chapter2",
+    "reinforcement_learning.chapter2.bandit",
+]
+
+[tool.setuptools.package-dir]
+reinforcement_learning = "src/reinforcement_learning"

@@ -1,6 +1,7 @@
 import numpy as np
-from bandit.bandit_class import Bandit
-from bandit.bandit_learner import EpsilonGreedyLearner
+import reinforcement_learning.chapter2.bandit as bd
+
+import os
 
 import matplotlib as mpl
 import matplotlib.ticker as mtick
@@ -8,7 +9,9 @@ import matplotlib.pyplot as plt
 mpl.rc('text', usetex=True)
 mpl.rc('font', family='serif')
 
-save = True
+output_dir = 'docs/chapter2/output/figures'
+if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
 
 k = 10
 n_run = 2000
@@ -51,10 +54,8 @@ ax.set_ylabel(ar)
 ax.set_xlim([0,n_step])
 ax.set_xlabel('Steps')
 ax.legend()
-if save:
-    fig.savefig("average_reward.pdf", transparent=True)
-else:
-    plt.show()
+fig_path = os.path.join(output_dir, "average_reward.pdf")
+fig.savefig(fig_path, transparent=True)
 
 # Plotting the figure for the optimal action
 fig, ax= plt.subplots()
@@ -70,7 +71,5 @@ ax.set_xlim([0,n_step])
 ax.set_ylim([0,100])
 ax.yaxis.set_major_formatter(mtick.PercentFormatter())
 ax.legend()
-if save:
-    fig.savefig("optimal_action.pdf", transparent=True)
-else:
-    plt.show()
+fig_path = os.path.join(output_dir, "optimal_action.pdf")
+fig.savefig(fig_path, transparent=True)
